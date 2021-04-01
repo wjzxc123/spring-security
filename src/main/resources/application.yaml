@@ -1,0 +1,17 @@
+server:
+  port: 8080
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/licon
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      username: root
+      password: root
+      maximum-pool-size: 30
+  security:
+    user:
+      name: root
+      password: root
+
+mybatis:
+  mapper-locations: classpath:mapper:/*.xml
