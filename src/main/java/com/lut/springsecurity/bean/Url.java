@@ -1,5 +1,7 @@
 package com.lut.springsecurity.bean;
 
+import java.util.List;
+
 import lombok.Data;
 
 /**
@@ -13,5 +15,6 @@ public class Url {
 	String id;
 	String urlPath;
 	String describe;
-	String voteType;
+	int voteType;
+	List<Authority> authorities;
 }

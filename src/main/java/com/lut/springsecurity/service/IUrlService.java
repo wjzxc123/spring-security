@@ -1,5 +1,7 @@
 package com.lut.springsecurity.service;
 
+import java.util.List;
+
 import com.lut.springsecurity.bean.Url;
 
 /**
@@ -9,5 +11,7 @@ import com.lut.springsecurity.bean.Url;
  * @date 2021/4/1 11:44
  */
 public interface IUrlService {
-	Url getAllUrl();
+	List<Url> getAllUrl();
+
+	List<Url> getUrlByPath(String path);
 }

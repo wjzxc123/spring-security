@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lut.springsecurity.dao.UrlMapper">
+	<resultMap type="com.lut.springsecurity.bean.Url" id="BaseResult">
+		<result column="id" property="id"/>
+		<result column="url_path" property="urlPath"/>
+		<result column="describe" property="describe"/>
+		<result column="vote_type" property="voteType"/>
+		<association property="authorities" javaType="com.lut.springsecurity.bean.Authority">
+			<result column="role_id" property="id"/>
+			<result column="url_path" property="roleCode"/>
+			<result column="authority_id" property="roleName"/>
+		</association>
+	</resultMap>
+
+	<select id="selectAllUrl" resultMap="BaseResult">
+		SELECT
+			a.*,
+			c.id role_id,
+			c.role_code,
+			c.role_name
+		FROM
+			url a
+		LEFT JOIN url_authority b on a.id = b.url_id
+		LEFT JOIN authority c on b.authority_id = c.id
+	</select>
+
+	<select id="getUrlByPath" parameterType="java.lang.String" resultMap="BaseResult">
+		SELECT
+			a.*,
+			c.id role_id,
+			c.role_code,
+			c.role_name
+		FROM
+			url a
+		LEFT JOIN url_authority b on a.id = b.url_id
+		LEFT JOIN authority c on b.authority_id = c.id
+		WHERE a.url_path LIKE concat('%',#{path},'%')
+	</select>
+</mapper>
+
