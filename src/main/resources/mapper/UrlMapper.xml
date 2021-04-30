@@ -6,11 +6,12 @@
 		<result column="url_path" property="urlPath"/>
 		<result column="describe" property="describe"/>
 		<result column="vote_type" property="voteType"/>
-		<association property="authorities" javaType="com.lut.springsecurity.bean.Authority">
+		<collection property="authorities" ofType="com.lut.springsecurity.bean.Authority">
 			<result column="role_id" property="id"/>
-			<result column="url_path" property="roleCode"/>
-			<result column="authority_id" property="roleName"/>
-		</association>
+			<result column="role_code" property="roleCode"/>
+			<result column="role_name" property="roleName"/>
+			<result column="auth_type" property="authType"/>
+		</collection>
 	</resultMap>
 
 	<select id="selectAllUrl" resultMap="BaseResult">
@@ -23,6 +24,8 @@
 			url a
 		LEFT JOIN url_authority b on a.id = b.url_id
 		LEFT JOIN authority c on b.authority_id = c.id
+		WHERE
+			c.auth_type = 'U'
 	</select>
 
 	<select id="getUrlByPath" parameterType="java.lang.String" resultMap="BaseResult">
@@ -36,6 +39,7 @@
 		LEFT JOIN url_authority b on a.id = b.url_id
 		LEFT JOIN authority c on b.authority_id = c.id
 		WHERE a.url_path LIKE concat('%',#{path},'%')
+			and c.auth_type = 'U'
 	</select>
 </mapper>
 

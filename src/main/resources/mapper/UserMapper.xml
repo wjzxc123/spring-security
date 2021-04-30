@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lut.springsecurity.dao.UserMapper">
+	<resultMap id="BASE" type="com.lut.springsecurity.bean.User">
+		<result column="username" property="username"/>
+		<result column="password" property="password"/>
+		<result column="enabled" property="enabled"/>
+	</resultMap>
+	
+	<resultMap id="BASE_AUTHORITY" type="com.lut.springsecurity.entity.UserAuthorities">
+		<result column="username" property="username"/>
+		<collection property="authorityList" ofType="com.lut.springsecurity.bean.Authority">
+			<result column="id" property="id"/>
+			<result column="role_code" property="roleCode"/>
+			<result column="role_name" property="roleName"/>
+			<result column="auth_type" property="authType"/>
+		</collection>
+	</resultMap>
+
+	<select id="selectUserAuthByUserName" parameterType="java.lang.String" resultMap="BASE_AUTHORITY">
+		SELECT
+			ua.username,
+			a.id,
+			a.role_code,
+			a.role_name
+		FROM
+			authorities ua
+			LEFT JOIN authority a ON ua.authority_id = a.id
+		WHERE
+			ua.username = #{username}
+# 			and a.auth_type = 'R' 先不考虑是角色与权限的区别
+	</select>
+</mapper>

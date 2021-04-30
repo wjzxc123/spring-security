@@ -11,7 +11,7 @@
  Target Server Version : 50731
  File Encoding         : 65001
 
- Date: 01/04/2021 18:19:03
+ Date: 30/04/2021 16:51:43
 */
 
 SET NAMES utf8mb4;
@@ -22,18 +22,22 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ----------------------------
 DROP TABLE IF EXISTS `authorities`;
 CREATE TABLE `authorities`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `username` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `authority_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `ix_auth_username`(`username`, `authority_id`) USING BTREE,
   INDEX `fk_authorities_authority`(`authority_id`) USING BTREE,
-  CONSTRAINT `fk_authorities_users` FOREIGN KEY (`username`) REFERENCES `users` (`username`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  CONSTRAINT `fk_authorities_authority` FOREIGN KEY (`authority_id`) REFERENCES `authority` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
+  CONSTRAINT `fk_authorities_authority` FOREIGN KEY (`authority_id`) REFERENCES `authority` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `fk_authorities_users` FOREIGN KEY (`username`) REFERENCES `users` (`username`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of authorities
 -- ----------------------------
-INSERT INTO `authorities` VALUES ('zhangsan', 1);
+INSERT INTO `authorities` VALUES (1, 'zhangsan', 1);
+INSERT INTO `authorities` VALUES (2, 'zhangsan', 2);
+INSERT INTO `authorities` VALUES (3, 'zhangsan', 3);
 
 -- ----------------------------
 -- Table structure for authority
@@ -43,6 +47,8 @@ CREATE TABLE `authority`  (
   `id` int(11) NOT NULL,
   `role_code` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `role_name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `auth_type` varchar(2) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT 'R 标识角色，U标识url操作权限',
+  `p_code` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '父级角色名称',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `role_code`(`role_code`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
@@ -50,8 +56,11 @@ CREATE TABLE `authority`  (
 -- ----------------------------
 -- Records of authority
 -- ----------------------------
-INSERT INTO `authority` VALUES (1, 'admin', '管理员');
-INSERT INTO `authority` VALUES (2, 'user', '用户');
+INSERT INTO `authority` VALUES (1, 'admin', '管理员', 'R', NULL);
+INSERT INTO `authority` VALUES (2, 'user', '用户', 'R', 'admin');
+INSERT INTO `authority` VALUES (3, 'user_info', '用户信息接口权限', 'U', 'user');
+INSERT INTO `authority` VALUES (4, 'address_info', '定制信息接口', 'U', 'user');
+INSERT INTO `authority` VALUES (5, 'multi_address', '多地址接口', 'U', 'address_info');
 
 -- ----------------------------
 -- Table structure for url
@@ -68,7 +77,7 @@ CREATE TABLE `url`  (
 -- ----------------------------
 -- Records of url
 -- ----------------------------
-INSERT INTO `url` VALUES (1, '/api/all-user', '获取所有用户', 1);
+INSERT INTO `url` VALUES (1, '/all-user', '获取所有用户', 1);
 
 -- ----------------------------
 -- Table structure for url_authority
@@ -78,6 +87,7 @@ CREATE TABLE `url_authority`  (
   `id` int(11) NOT NULL,
   `url_id` int(11) DEFAULT NULL,
   `authority_id` int(11) DEFAULT NULL,
+  `req_method` varchar(10) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL COMMENT '请求类型',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `fk_urlauthority_url`(`url_id`) USING BTREE,
   INDEX `fk_urlauthority_authority`(`authority_id`) USING BTREE,
@@ -88,7 +98,7 @@ CREATE TABLE `url_authority`  (
 -- ----------------------------
 -- Records of url_authority
 -- ----------------------------
-INSERT INTO `url_authority` VALUES (1, 1, 1);
+INSERT INTO `url_authority` VALUES (1, 1, 3, 'GET');
 
 -- ----------------------------
 -- Table structure for users
@@ -104,6 +114,6 @@ CREATE TABLE `users`  (
 -- ----------------------------
 -- Records of users
 -- ----------------------------
-INSERT INTO `users` VALUES ('zhangsan', '123456', 1);
+INSERT INTO `users` VALUES ('zhangsan', '$2a$10$uMpXoFHemhCERRB.sSnZZOJdOFH3hQQKPjIrjRoXAZKzL7Sa8gvDe', 1);
 
 SET FOREIGN_KEY_CHECKS = 1;

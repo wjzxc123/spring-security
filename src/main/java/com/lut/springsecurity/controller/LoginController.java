@@ -17,4 +17,14 @@ public class LoginController {
 	public String loginPage(){
 		return "/login-licon";
 	}
+
+	@GetMapping("/index")
+	public String indexPage(){
+		return "/index";
+	}
+
+	@GetMapping("/failure")
+	public String failurePage(){
+		return "/failure";
+	}
 }

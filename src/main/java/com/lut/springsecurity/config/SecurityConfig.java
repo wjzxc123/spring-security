@@ -1,10 +1,20 @@
 package com.lut.springsecurity.config;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collections;
+
+import javax.annotation.Resource;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDecisionManager;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.access.vote.AffirmativeBased;
 import org.springframework.security.access.vote.ConsensusBased;
 import org.springframework.security.access.vote.RoleVoter;
@@ -18,6 +28,11 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.util.Assert;
 
@@ -51,7 +66,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	 */
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-		auth.authenticationProvider(loginAuthenticationProvider).userDetailsService(null);
+		auth.authenticationProvider(loginAuthenticationProvider);
 	}
 
 	/**
@@ -72,26 +87,50 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
-		http.authorizeRequests(authorise-> authorise.anyRequest().authenticated().withObjectPostProcessor(filterSecurityInterceptorObjectPostProcessor()))
+		http.authorizeRequests(authorise-> authorise.antMatchers("/login","/index","/static/*").permitAll()
+			.anyRequest().authenticated().withObjectPostProcessor(filterSecurityInterceptorObjectPostProcessor()))
 			.formLogin(formlogin->formlogin
-					.loginPage("/login-licon.html")
-					.loginProcessingUrl("/login-test")
-					.failureUrl("/login-error")
+					.loginPage("/login")
+					.loginProcessingUrl("/login")
+					.defaultSuccessUrl("/index")
+					.failureUrl("/failure")
 					.successHandler((request, response, authentication) -> {
 						response.setCharacterEncoding("utf-8");
 						response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 						PrintWriter writer = response.getWriter();
-						writer.println("{code:200,success:true}");
+						writer.println("{\"code\":200,\"success\":true,\"authentication\":"+authentication.getPrincipal()+"}");
 						writer.flush();
+						writer.close();
 					})
 					.failureHandler((request, response, exception) -> {
 						response.setCharacterEncoding("utf-8");
 						response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 						PrintWriter writer = response.getWriter();
-						writer.println("{code:500,success:false}");
+						writer.println("{\"code\":500,\"success\":false,\"exception\":"+exception.getMessage()+"}");
 						writer.flush();
+						writer.close();
 					})
 			);
+			http.exceptionHandling()
+					.authenticationEntryPoint((request, response, authException) -> {
+						response.setCharacterEncoding("utf-8");
+						response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+						PrintWriter writer = response.getWriter();
+						writer.println("{\"code\":401,\"success\":false,\"exception\":\""+authException.getMessage()+"\"}");
+						writer.flush();
+						writer.close();
+					})
+					.accessDeniedHandler((request, response, accessDeniedException) ->{
+						response.setCharacterEncoding("utf-8");
+						response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+						PrintWriter writer = response.getWriter();
+						writer.println("{code:503,success:false,exception:"+accessDeniedException.getMessage()+"}");
+						writer.flush();
+						writer.close();
+					}
+			);
+
+			http.csrf().disable();
 		/* 资源服务器jwt配置 .oauth2ResourceServer(oauth2->oauth2.jwt(jwt->jwt.jwtAuthenticationConverter()))*/
 	}
 
@@ -109,8 +148,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	AccessDecisionManager obtainAccessDecisionManager(){
 		return new CustomerDecisionManageProvider(voteCode->{
 			AccessDecisionManager accessDecisionManager = null;
-			RoleVoter roleVoter = new RoleVoter();
-			roleVoter.setRolePrefix("");
+			CustomRoleVoter roleVoter = new CustomRoleVoter();
 			switch (VoteTypeEnum.getVoteTypeByCode(voteCode)){
 				case AFFIRMATIVE:
 					accessDecisionManager = new AffirmativeBased(Collections.singletonList(roleVoter));break;
@@ -124,4 +162,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 			return accessDecisionManager;
 		}).getAccessDecisionManager(1);
 	}
+
+	@Bean
+	public PasswordEncoder passwordEncoder(){
+		return new BCryptPasswordEncoder();
+	}
+
 }

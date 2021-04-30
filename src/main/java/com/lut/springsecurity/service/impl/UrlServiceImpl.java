@@ -27,6 +27,6 @@ public class UrlServiceImpl implements IUrlService {
 
 	@Override
 	public List<Url> getUrlByPath(String path) {
-		return null;
+		return urlMapper.getUrlByPath(path);
 	}
 }

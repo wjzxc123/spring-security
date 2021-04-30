@@ -39,10 +39,10 @@ public class CustomerWebMetadataSource implements FilterInvocationSecurityMetada
 	@Override
 	public Collection<ConfigAttribute> getAttributes(Object object) throws IllegalArgumentException {
 		HttpServletRequest request = ((FilterInvocation) object).getRequest();
-
+		//TODO 使用redis存储权限集
 		List<Url> allUrl = urlService.getUrlByPath(request.getRequestURI());
-		if (CollectionUtils.isEmpty(allUrl)){
-			return null;
+		if (CollectionUtils.isEmpty(allUrl)){ 
+			return SecurityConfig.createList();
 		}
 		Map<String, List<Authority>> urlsMap = allUrl.stream()
 				.collect(Collectors.toMap(Url::getUrlPath, Url::getAuthorities));
@@ -69,7 +69,7 @@ public class CustomerWebMetadataSource implements FilterInvocationSecurityMetada
 					.distinct().toArray(String[]::new));
 		}
 
-		return null;
+		return SecurityConfig.createList();
 	}
 
 	@Override
